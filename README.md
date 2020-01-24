@@ -10,6 +10,7 @@ IRC bot to aid in tabletop-style RPG adventures.
 - [ ] NPC storage/recall
 - [ ] Monster storage/recall
 - [ ] PC quick reference
+- [ ] Campaign notes for players
 
 ## License
 
