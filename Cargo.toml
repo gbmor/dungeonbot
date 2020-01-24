@@ -1,0 +1,32 @@
+[package]
+name = "dungeonbot"
+version = "0.1.0"
+authors = ["Ben Morrison <ben@gbmor.dev>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+debug = false
+debug-assertions = false
+overflow-checks = false
+panic = 'abort'
+
+[profile.dev]
+opt-level = 0
+lto = false
+debug = true
+debug-assertions = true
+overflow-checks = true
+panic = 'unwind'
+
+[profile.bench]
+opt-level = 3
+lto = false
+debug = false
+debug-assertions = false
+overflow-checks = false
+panic = 'unwind'
