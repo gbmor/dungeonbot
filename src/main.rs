@@ -13,6 +13,7 @@ static SERVER: &str = "irc.tilde.chat";
 static PORT: u16 = 6697;
 static USE_SSL: bool = true;
 
+#[cfg_attr(tarpaulin, skip)]
 fn main() -> Result<()> {
     println!("dungeonbot 0.1");
     println!();
