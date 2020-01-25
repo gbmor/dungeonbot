@@ -178,7 +178,6 @@ name = "dungeonbot"
 version = "0.1.0"
 dependencies = [
  "irc",
- "lazy_static",
 ]
 
 [[package]]

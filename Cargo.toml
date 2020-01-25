@@ -7,7 +7,6 @@ edition = "2018"
 
 [dependencies]
 irc = "^0.13"
-lazy_static = "^1.4"
 
 [profile.release]
 opt-level = 3
