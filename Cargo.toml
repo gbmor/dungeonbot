@@ -11,11 +11,12 @@ rand = "^0.7"
 
 [profile.release]
 opt-level = 3
-lto = true
+lto = "thin"
 debug = false
 debug-assertions = false
 overflow-checks = false
-panic = 'abort'
+panic = "abort"
+incremental = true
 
 [profile.dev]
 opt-level = 0
@@ -23,11 +24,23 @@ lto = false
 debug = true
 debug-assertions = true
 overflow-checks = true
-panic = 'unwind'
+panic = "unwind"
+incremental = true
 
 [profile.bench]
 opt-level = 3
-lto = true
+lto = "thin"
 debug = false
 debug-assertions = false
 overflow-checks = false
+incremental = true
+
+[profile.test]
+opt-level = 0
+lto = false
+debug = true
+debug-assertions = true
+overflow-checks = true
+panic = "unwind"
+incremental = true
+
