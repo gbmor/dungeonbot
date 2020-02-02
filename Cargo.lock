@@ -178,6 +178,7 @@ name = "dungeonbot"
 version = "0.1.0"
 dependencies = [
  "irc",
+ "rand",
 ]
 
 [[package]]
