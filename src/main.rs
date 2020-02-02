@@ -1,5 +1,7 @@
 use irc::client::prelude::*;
 
+mod dice;
+
 type Result<T> = std::result::Result<T, irc::error::IrcError>;
 
 #[cfg_attr(tarpaulin, skip)]
