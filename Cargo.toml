@@ -27,7 +27,7 @@ panic = 'unwind'
 
 [profile.bench]
 opt-level = 3
-lto = false
+lto = true
 debug = false
 debug-assertions = false
 overflow-checks = false
