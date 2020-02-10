@@ -1,17 +1,14 @@
-language: rust
+language: go
 
-rust:
-  - stable
-  - beta
-  - nightly
+go:
+  - 1.11.x
+  - 1.12.x
+  - 1.13.x
 
-os: 
+os:
   - linux
 
 dist: xenial
 
-script:
-    - cargo install cargo-tarpaulin
-    - cargo build --verbose
-    - cargo tarpaulin --out Xml
-    - bash <(curl -s https://codecov.io/bash)
+env:
+  - GO111MODULE=on

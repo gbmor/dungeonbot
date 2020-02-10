@@ -1,0 +1,6 @@
+nick: 'dungeonbot'
+user: 'dungeonbot'
+chans: '#ttrpg,#ttrpg-ooc'
+server: 'irc.example.com'
+port: 6697
+ssl: true
