@@ -17,13 +17,18 @@ func getRoll(ceiling int) int {
 
 func parseDice(s string) (string, error) {
 	split := strings.Split(s, "d")
+	plusRaw := strings.Split(split[1], "+")
+	plus, err := strconv.Atoi(plusRaw[len(plusRaw)-1])
+	if err != nil || len(plusRaw) == 1 {
+		plus = 0
+	}
 
 	diceNum, err := strconv.Atoi(split[0])
 	if err != nil {
 		return "", fmt.Errorf("unable to parse dice quantity")
 	}
 
-	diceCeiling, err := strconv.Atoi(split[1])
+	diceCeiling, err := strconv.Atoi(plusRaw[0])
 	if err != nil {
 		return "", fmt.Errorf("unable to parse die type")
 	}
@@ -51,7 +56,7 @@ func parseDice(s string) (string, error) {
 	for _, d := range totes {
 		total += d
 	}
-	out += fmt.Sprintf(", total: %d", total)
+	out += fmt.Sprintf(",  total: %d", total+plus)
 
 	return strings.TrimSpace(out), nil
 }
