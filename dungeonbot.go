@@ -39,6 +39,21 @@ func main() {
 		}
 	})
 
+	conn.AddCallback("*", func(e *irc.Event) {
+		splitRaw := strings.Split(e.Raw, " ")
+		target := splitRaw[2]
+		msg := strings.Split(e.Message(), " ")
+		switch msg[0] {
+		case "!roll":
+			out, err := parseDice(msg[1])
+			if err != nil {
+				conn.Privmsgf(target, "%s", err.Error())
+				return
+			}
+			conn.Privmsgf(target, "%s", out)
+		}
+	})
+
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
 	}
