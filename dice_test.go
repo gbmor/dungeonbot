@@ -151,3 +151,11 @@ func Test_parseDice(t *testing.T) {
 		})
 	}
 }
+
+func Benchmark_parseDice(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for _, tt := range parseDiceCases {
+			parseDice(tt.raw)
+		}
+	}
+}

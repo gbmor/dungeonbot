@@ -17,6 +17,8 @@ func getRoll(ceiling int) int {
 
 func parseDice(s string) (string, error) {
 	split := strings.Split(s, "d")
+	plus := 0
+
 	plusRaw := strings.Split(split[1], "+")
 	plus, err := strconv.Atoi(plusRaw[len(plusRaw)-1])
 	if err != nil || len(plusRaw) == 1 {
@@ -49,14 +51,17 @@ func parseDice(s string) (string, error) {
 	for i := 0; i < diceNum; i++ {
 		res := getRoll(diceCeiling)
 		totes = append(totes, res)
-		out += fmt.Sprintf("%d  ", res)
+		if i == diceNum-1 {
+			out += fmt.Sprintf("%d", res)
+		} else {
+			out += fmt.Sprintf("%d  ", res)
+		}
 	}
-	out = strings.TrimSpace(out)
 	total := 0
 	for _, d := range totes {
 		total += d
 	}
 	out += fmt.Sprintf(",  total: %d", total+plus)
 
-	return strings.TrimSpace(out), nil
+	return out, nil
 }
