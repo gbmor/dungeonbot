@@ -6,7 +6,7 @@ IRC bot to aid in tabletop-style RPG adventures.
 
 ## Goals
 
-- [ ] Dice rolling
+- [x] Dice rolling
 - [ ] NPC storage/recall
 - [ ] Monster storage/recall
 - [ ] PC quick reference
