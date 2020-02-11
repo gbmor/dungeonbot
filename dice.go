@@ -40,9 +40,18 @@ func parseDice(s string) (string, error) {
 	}
 
 	out := ""
+	var totes []int
 	for i := 0; i < diceNum; i++ {
 		res := getRoll(diceCeiling)
-		out += fmt.Sprintf("%d ", res)
+		totes = append(totes, res)
+		out += fmt.Sprintf("%d  ", res)
 	}
+	out = strings.TrimSpace(out)
+	total := 0
+	for _, d := range totes {
+		total += d
+	}
+	out += fmt.Sprintf(", total: %d", total)
+
 	return strings.TrimSpace(out), nil
 }

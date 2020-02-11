@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"testing"
@@ -112,7 +111,6 @@ func Test_parseDice(t *testing.T) {
 	for _, tt := range parseDiceCases {
 		t.Run(tt.raw, func(t *testing.T) {
 			out, err := parseDice(tt.raw)
-			log.Printf("%s", out)
 			if err != nil && !tt.wantErr {
 				t.Errorf("Got unexpected error: %s", err.Error())
 			}
@@ -123,7 +121,8 @@ func Test_parseDice(t *testing.T) {
 				return
 			}
 
-			split := strings.Split(out, " ")
+			split := strings.Split(out, ",")
+			split = strings.Split(split[0], "  ")
 			for i := 0; i < len(split); i++ {
 				die := split[i]
 				num, _ := strconv.Atoi(die)
