@@ -57,6 +57,12 @@ func main() {
 			return
 		}
 		target := splitRaw[2]
+
+		if strings.HasPrefix(e.Message(), "rain drop") {
+			conn.Privmsg(target, "drop top")
+			return
+		}
+
 		msg := strings.Split(e.Message(), " ")
 		switch msg[0] {
 		case "!roll":
@@ -108,7 +114,7 @@ func watchForInterrupt(conn *irc.Connection, nick string) {
 		for sigint := range c {
 			log.Printf("Caught %v\n", sigint)
 			conn.SendRawf("QUIT /me yeet %s", nick)
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(50 * time.Millisecond)
 			os.Exit(0)
 		}
 	}()
