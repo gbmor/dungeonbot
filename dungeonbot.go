@@ -66,6 +66,10 @@ func main() {
 		msg := strings.Split(e.Message(), " ")
 		switch msg[0] {
 		case "!roll":
+			if len(msg) < 2 {
+				conn.Privmsg(target, "Missing dice argument. Eg: !roll 1d20")
+				return
+			}
 			out, err := parseDice(msg[1])
 			if err != nil {
 				conn.Privmsgf(target, "%s", err.Error())
