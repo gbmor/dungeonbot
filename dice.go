@@ -20,6 +20,10 @@ func parseDice(s string) (string, error) {
 	plus := 0
 
 	plusRaw := strings.Split(split[1], "+")
+	if plusRaw[0] == "69" {
+		return "n i c e", nil
+	}
+
 	plus, err := strconv.Atoi(plusRaw[len(plusRaw)-1])
 	if err != nil || len(plusRaw) == 1 {
 		plus = 0

@@ -123,12 +123,24 @@ var parseDiceCases = []struct {
 		quantity: 4,
 		wantErr:  false,
 	},
+	{
+		raw:      "1d69",
+		ceiling:  69,
+		quantity: 1,
+		wantErr:  false,
+	},
 }
 
 func Test_parseDice(t *testing.T) {
 	for _, tt := range parseDiceCases {
 		t.Run(tt.raw, func(t *testing.T) {
 			out, err := parseDice(tt.raw)
+			if tt.raw == "1d69" && out != "n i c e" {
+				t.Errorf("69 didn't return n i c e")
+			}
+			if tt.raw == "1d69" && out == "n i c e" {
+				return
+			}
 			if err != nil && !tt.wantErr {
 				t.Errorf("Got unexpected error: %s", err.Error())
 			}
