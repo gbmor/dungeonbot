@@ -4,7 +4,10 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 	irc "github.com/thoj/go-ircevent"
@@ -58,6 +61,8 @@ func main() {
 		}
 	})
 
+	watchForInterrupt(conn)
+
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
 	}
@@ -85,4 +90,18 @@ func buildConf() Config {
 		port:   viper.GetUint("port"),
 		ssl:    viper.GetBool("ssl"),
 	}
+}
+
+func watchForInterrupt(conn *irc.Connection) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	go func() {
+		for sigint := range c {
+			log.Printf("Caught %v\n", sigint)
+			go conn.Disconnect()
+			time.Sleep(1000 * time.Millisecond)
+			os.Exit(0)
+		}
+	}()
 }
