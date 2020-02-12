@@ -99,7 +99,7 @@ func watchForInterrupt(conn *irc.Connection) {
 	go func() {
 		for sigint := range c {
 			log.Printf("Caught %v\n", sigint)
-			go conn.Disconnect()
+			conn.SendRaw("QUIT /me yeet dungeonbot")
 			time.Sleep(1000 * time.Millisecond)
 			os.Exit(0)
 		}
