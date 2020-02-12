@@ -129,6 +129,12 @@ var parseDiceCases = []struct {
 		quantity: 1,
 		wantErr:  false,
 	},
+	{
+		raw:      "101d10",
+		ceiling:  10,
+		quantity: 101,
+		wantErr:  true,
+	},
 }
 
 func Test_parseDice(t *testing.T) {

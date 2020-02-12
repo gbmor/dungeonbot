@@ -33,6 +33,9 @@ func parseDice(s string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to parse dice quantity")
 	}
+	if diceNum > 100 {
+		return "", fmt.Errorf("too many dice jfc")
+	}
 
 	diceCeiling, err := strconv.Atoi(plusRaw[0])
 	if err != nil {
