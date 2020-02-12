@@ -61,7 +61,7 @@ func main() {
 		}
 	})
 
-	watchForInterrupt(conn)
+	watchForInterrupt(conn, conf.nick)
 
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
@@ -92,14 +92,14 @@ func buildConf() Config {
 	}
 }
 
-func watchForInterrupt(conn *irc.Connection) {
+func watchForInterrupt(conn *irc.Connection, nick string) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
 	go func() {
 		for sigint := range c {
 			log.Printf("Caught %v\n", sigint)
-			conn.SendRaw("QUIT /me yeet dungeonbot")
+			conn.SendRawf("QUIT /me yeet %s", nick)
 			time.Sleep(1000 * time.Millisecond)
 			os.Exit(0)
 		}
