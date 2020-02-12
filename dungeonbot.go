@@ -14,7 +14,7 @@ import (
 )
 
 // VERSION is the dungeonbot version
-const VERSION = "0.1.0"
+var VERSION = ""
 
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
@@ -27,6 +27,15 @@ type Config struct {
 }
 
 func main() {
+	fmt.Println()
+	if VERSION == "" {
+		fmt.Println("\t-->  dungeonbot v0.1.0  <--")
+	} else {
+		fmt.Printf("\t--> dungeonbot %s <--\n", VERSION)
+	}
+	fmt.Println("\tgithub.com/gbmor/dungeonbot")
+	fmt.Println()
+
 	conf := buildConf()
 	host := fmt.Sprintf("%s:%d", conf.server, conf.port)
 
