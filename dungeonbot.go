@@ -41,6 +41,10 @@ func main() {
 
 	conn.AddCallback("*", func(e *irc.Event) {
 		splitRaw := strings.Split(e.Raw, " ")
+		if splitRaw[0] == "PING" {
+			e.Connection.SendRawf("PONG %s", splitRaw[1])
+			return
+		}
 		target := splitRaw[2]
 		msg := strings.Split(e.Message(), " ")
 		switch msg[0] {
