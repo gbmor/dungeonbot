@@ -31,7 +31,7 @@ func main() {
 	if VERSION == "" {
 		fmt.Println("\t-->  dungeonbot v0.1.0  <--")
 	} else {
-		fmt.Printf("\t--> dungeonbot %s <--\n", VERSION)
+		fmt.Printf("\t-->  dungeonbot %s  <--\n", VERSION)
 	}
 	fmt.Println("\tgithub.com/gbmor/dungeonbot")
 	fmt.Println()
