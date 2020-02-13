@@ -44,6 +44,9 @@ func main() {
 	conn.UseTLS = conf.ssl
 	conn.TLSConfig = &tls.Config{InsecureSkipVerify: false}
 
+	db := &DB{}
+	db.init()
+
 	conn.AddCallback("001", func(e *irc.Event) {
 		for i := 0; i < len(conf.chans); i++ {
 			conn.Join(conf.chans[i])
@@ -73,6 +76,19 @@ func main() {
 			out, err := parseDice(msg[1])
 			if err != nil {
 				conn.Privmsgf(target, "%s", err.Error())
+				return
+			}
+			conn.Privmsgf(target, "%s", out)
+		case "!campaign":
+			if len(msg) < 2 {
+				conn.Privmsgf(target, "Missing campaign name. Eg: !campaign gronkulousness")
+				return
+			}
+			arg := strings.Join(msg[1:], " ")
+			out, err := db.getCampaignNotes(arg)
+			if err != nil {
+				conn.Privmsgf(target, "No campaign notes for %s", arg)
+				log.Printf("%s", err.Error())
 				return
 			}
 			conn.Privmsgf(target, "%s", out)

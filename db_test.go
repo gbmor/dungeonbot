@@ -38,3 +38,27 @@ func Test_DB_init(t *testing.T) {
 		}
 	})
 }
+
+func Test_getCampaignNotes(t *testing.T) {
+	t.Run("get campaign notes", func(t *testing.T) {
+		db := &DB{}
+		err := db.init()
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+		defer db.conn.Close()
+
+		_, err = db.conn.Exec("INSERT OR REPLACE INTO campaigns (name, notes) VALUES(?, ?)", "gronkulousness", "degronklified the dragon on 13 feb")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+
+		out, err := db.getCampaignNotes("gronkulousness")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+		if len(out) == 0 || out != "degronklified the dragon on 13 feb" {
+			t.Errorf("Output: %s", out)
+		}
+	})
+}

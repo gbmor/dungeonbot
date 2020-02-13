@@ -86,3 +86,19 @@ func (db *DB) init() error {
 	db.mu = &sync.RWMutex{}
 	return nil
 }
+
+func (db *DB) getCampaignNotes(campaign string) (string, error) {
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return "", fmt.Errorf("Couldn't begin transaction: %s", err.Error())
+	}
+
+	row := tx.QueryRow("SELECT * FROM campaigns WHERE name=:campname", campaign)
+	if row == nil {
+		return "", fmt.Errorf("Couldn't query row in table campaigns, campaign: %s", campaign)
+	}
+
+	crow := &CampaignRow{}
+	row.Scan(&crow.name, &crow.notes)
+	return crow.notes, nil
+}
