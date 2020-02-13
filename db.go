@@ -14,12 +14,32 @@ type DB struct {
 	conn *sql.DB
 }
 
-// Row holds a given row from the database
-type Row struct {
-	nick     string `db:"nick"`
-	campaign string `db:"campaignName"`
-	char     string `db:"charName"`
-	notes    string `db:"notes"`
+// PCRow holds a given row from the database
+type PCRow struct {
+	nick     string
+	campaign string
+	char     string
+	notes    string
+}
+
+// CampaignRow holds a given row from table campaigns
+type CampaignRow struct {
+	name  string
+	notes string
+}
+
+// NPCRow holds a given row from table npcs
+type NPCRow struct {
+	name  string
+	stats string
+	notes string
+}
+
+// MonsterRow holds a given row from table monsters
+type MonsterRow struct {
+	name  string
+	stats string
+	notes string
 }
 
 func (db *DB) init() error {

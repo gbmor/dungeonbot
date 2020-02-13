@@ -18,7 +18,7 @@ func Test_DB_init(t *testing.T) {
 			t.Errorf("%s", err.Error())
 		}
 
-		row := Row{}
+		row := PCRow{}
 		tmprow := db.conn.QueryRow("SELECT * FROM pcs WHERE campaign='testCampaign'")
 		err = tmprow.Scan(&row.nick, &row.campaign, &row.char, &row.notes)
 		if err != nil {
