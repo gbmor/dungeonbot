@@ -31,8 +31,8 @@ func (db *DB) init() error {
 
 	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS pcs (
 		nick TEXT NOT NULL,
-		campaignName TEXT NOT NULL,
-		charName TEXT NOT NULL,
+		campaign TEXT NOT NULL,
+		char TEXT NOT NULL,
 		notes TEXT
 	);`)
 	if err != nil {
@@ -40,11 +40,27 @@ func (db *DB) init() error {
 	}
 
 	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
-		campaignName TEXT NOT NULL UNIQUE,
+		name TEXT NOT NULL UNIQUE,
 		notes TEXT
 	);`)
 	if err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `campaigns`")
+	}
+
+	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS npcs (
+		name TEXT NOT NULL UNIQUE,
+		notes TEXT
+	);`)
+	if err != nil {
+		return fmt.Errorf("Couldn't create-if-not-exists table `npcs`'")
+	}
+
+	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS monsters (
+		name TEXT NOT NULL UNIQUE,
+		notes TEXT
+	);`)
+	if err != nil {
+		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`")
 	}
 
 	db.mu = &sync.RWMutex{}
