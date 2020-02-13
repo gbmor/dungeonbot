@@ -116,7 +116,7 @@ func watchForInterrupt(conn *irc.Connection, nick string) {
 
 	go func() {
 		for sigint := range c {
-			log.Printf("Caught %v\n", sigint)
+			log.Printf("\n\nCaught %v\n", sigint)
 			conn.SendRawf("QUIT /me yeet %s", nick)
 			time.Sleep(50 * time.Millisecond)
 			os.Exit(0)
