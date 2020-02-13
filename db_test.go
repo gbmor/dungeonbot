@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"testing"
 )
 
@@ -13,11 +12,6 @@ func Test_DB_init(t *testing.T) {
 			t.Errorf("%s", err.Error())
 		}
 		defer db.conn.Close()
-
-		_, err = os.Stat("./dungeonbot.go")
-		if err != nil {
-			t.Errorf("%s", err.Error())
-		}
 
 		_, err = db.conn.Exec("INSERT OR REPLACE INTO pcs (nick, campaign, char, notes) VALUES(?, ?, ?, ?);", "foobat", "testCampaign", "testPlayer", "some notes")
 		if err != nil {
