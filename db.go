@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
+	"net"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -40,6 +42,27 @@ type MonsterRow struct {
 	name  string
 	stats string
 	notes string
+}
+
+func pastebin(pastebin string, input string) (string, error) {
+	pbconn, err := net.Dial("tcp", pastebin)
+	if err != nil {
+		return "", err
+	}
+	defer pbconn.Close()
+
+	_, err = pbconn.Write([]byte(input))
+	if err != nil {
+		return "", err
+	}
+
+	pbRdr := bufio.NewReader(pbconn)
+	pbBytes, _, err := pbRdr.ReadLine()
+	if err != nil {
+		return "", nil
+	}
+
+	return string(pbBytes), err
 }
 
 func (db *DB) init() error {

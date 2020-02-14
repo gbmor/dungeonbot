@@ -4,3 +4,5 @@ chans: '#ttrpg,#ttrpg-ooc'
 server: 'irc.example.com'
 port: 6697
 ssl: true
+
+pastebin_url: 'termbin.com:9999'

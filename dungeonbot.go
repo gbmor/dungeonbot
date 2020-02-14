@@ -18,12 +18,13 @@ var VERSION = ""
 
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
-	nick   string
-	user   string
-	chans  []string
-	server string
-	port   uint
-	ssl    bool
+	nick        string
+	user        string
+	chans       []string
+	server      string
+	port        uint
+	ssl         bool
+	pastebinURL string
 }
 
 func main() {
@@ -84,14 +85,25 @@ func main() {
 				conn.Privmsgf(target, "Missing campaign name. Eg: !campaign gronkulousness")
 				return
 			}
+
 			arg := strings.Join(msg[1:], " ")
-			out, err := db.getCampaignNotes(arg)
+			conn.Privmsgf(target, "Looking for %s campaign notes...", arg)
+
+			raw, err := db.getCampaignNotes(arg)
 			if err != nil {
 				conn.Privmsgf(target, "No campaign notes for %s", arg)
 				log.Printf("%s", err.Error())
 				return
 			}
-			conn.Privmsgf(target, "%s", out)
+
+			pbURL, err := pastebin(conf.pastebinURL, raw)
+			if err != nil {
+				conn.Privmsgf(target, "Error connecting to pastebin service: %s", err.Error())
+				log.Printf("%s", err.Error())
+				return
+			}
+
+			conn.Privmsgf(target, "%s", pbURL)
 		}
 	})
 
@@ -113,16 +125,18 @@ func buildConf() Config {
 		log.Fatalf("Error reading config file: %s", err.Error())
 	}
 
+	pbURL := viper.GetString("pastebin_url")
 	chanWhole := viper.GetString("chans")
 	chanSep := strings.Split(chanWhole, ",")
 
 	return Config{
-		nick:   viper.GetString("nick"),
-		user:   viper.GetString("user"),
-		chans:  chanSep,
-		server: viper.GetString("server"),
-		port:   viper.GetUint("port"),
-		ssl:    viper.GetBool("ssl"),
+		nick:        viper.GetString("nick"),
+		user:        viper.GetString("user"),
+		chans:       chanSep,
+		server:      viper.GetString("server"),
+		port:        viper.GetUint("port"),
+		ssl:         viper.GetBool("ssl"),
+		pastebinURL: pbURL,
 	}
 }
 
