@@ -80,6 +80,7 @@ func main() {
 				return
 			}
 			conn.Privmsgf(target, "%s", out)
+
 		case "!campaign":
 			if len(msg) < 2 {
 				conn.Privmsgf(target, "Missing campaign name. Eg: !campaign gronkulousness")
@@ -98,7 +99,7 @@ func main() {
 
 			pbURL, err := pastebin(conf.pastebinURL, raw)
 			if err != nil {
-				conn.Privmsgf(target, "Error connecting to pastebin service: %s", err.Error())
+				conn.Privmsgf(target, "Error connecting to pastebin service")
 				log.Printf("%s", err.Error())
 				return
 			}
