@@ -111,12 +111,7 @@ func (db *DB) init() error {
 }
 
 func (db *DB) getCampaignNotes(campaign string) (string, error) {
-	tx, err := db.conn.Begin()
-	if err != nil {
-		return "", fmt.Errorf("Couldn't begin transaction: %s", err.Error())
-	}
-
-	row := tx.QueryRow("SELECT * FROM campaigns WHERE name=:campname", campaign)
+	row := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:campname", campaign)
 	if row == nil {
 		return "", fmt.Errorf("Couldn't query row in table campaigns, campaign: %s", campaign)
 	}
@@ -124,4 +119,18 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 	crow := &CampaignRow{}
 	row.Scan(&crow.name, &crow.notes)
 	return crow.notes, nil
+}
+
+func (db *DB) createCampaign(name string) error {
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("Couldn't begin transaction: %s", err.Error())
+	}
+
+	_, err = tx.Exec("INSERT INTO campaigns (name, notes) VALUES(?, ?)", name, "")
+	if err != nil {
+		return fmt.Errorf("Couldn't execute statement: %s", err.Error())
+	}
+
+	return tx.Commit()
 }

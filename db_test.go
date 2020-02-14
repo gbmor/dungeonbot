@@ -75,3 +75,24 @@ func Test_getCampaignNotes(t *testing.T) {
 		}
 	})
 }
+
+func Test_createCampaign(t *testing.T) {
+	t.Run("create campaign entry", func(t *testing.T) {
+		db := &DB{}
+		err := db.init()
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+		defer db.conn.Close()
+
+		err = db.createCampaign("testcampaign")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+
+		_, err = db.getCampaignNotes("testcampaign")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+	})
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -105,10 +106,32 @@ func main() {
 			}
 
 			conn.Privmsgf(target, "%s", pbURL)
+
+		case "!add":
+			if len(msg) < 2 {
+				conn.Privmsgf(target, "Missing subcommand: campaign|pc|npc|monster")
+				return
+			}
+			if len(msg) < 3 {
+				conn.Privmsgf(target, "Missing argument. Eg: !add campaign gronkulousness")
+				return
+			}
+			subcommand := msg[1]
+
+			switch subcommand {
+			case "campaign":
+			case "pc":
+			case "npc":
+			case "monster":
+			}
+
+		case "!append":
+		case "!clear":
+		case "!delete":
 		}
 	})
 
-	watchForInterrupt(conn, conf.nick)
+	watchForInterrupt(conn, conf.nick, db.conn)
 
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
@@ -141,7 +164,7 @@ func buildConf() Config {
 	}
 }
 
-func watchForInterrupt(conn *irc.Connection, nick string) {
+func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
@@ -149,6 +172,7 @@ func watchForInterrupt(conn *irc.Connection, nick string) {
 		for sigint := range c {
 			log.Printf("\n\nCaught %v\n", sigint)
 			conn.SendRawf("QUIT /me yeet %s", nick)
+			db.Close()
 			time.Sleep(50 * time.Millisecond)
 			os.Exit(0)
 		}
