@@ -110,6 +110,10 @@ func (db *DB) init() error {
 }
 
 func (db *DB) getCampaignNotes(campaign string) (string, error) {
+	if err := db.conn.Ping(); err != nil {
+		return "", fmt.Errorf("Couldn't ping database: %s", err.Error())
+	}
+
 	row := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:campname", campaign)
 	if row == nil {
 		return "", fmt.Errorf("Couldn't query row in table campaigns, campaign: %s", campaign)
@@ -121,6 +125,10 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 }
 
 func (db *DB) createCampaign(name string) error {
+	if err := db.conn.Ping(); err != nil {
+		return fmt.Errorf("Couldn't ping database: %s", err.Error())
+	}
+
 	tx, err := db.conn.Begin()
 	if err != nil {
 		return fmt.Errorf("Couldn't begin transaction: %s", err.Error())
