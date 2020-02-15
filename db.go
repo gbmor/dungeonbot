@@ -12,7 +12,7 @@ import (
 
 // DB holds the database connection
 type DB struct {
-	mu   *sync.RWMutex
+	mu   sync.RWMutex
 	conn *sql.DB
 }
 
@@ -106,7 +106,6 @@ func (db *DB) init() error {
 		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`")
 	}
 
-	db.mu = &sync.RWMutex{}
 	return nil
 }
 

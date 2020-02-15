@@ -172,7 +172,12 @@ func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB) {
 		for sigint := range c {
 			log.Printf("\n\nCaught %v\n", sigint)
 			conn.SendRawf("QUIT /me yeet %s", nick)
-			db.Close()
+
+			err := db.Close()
+			if err != nil {
+				log.Printf("Error closing database connection: %s", err.Error())
+			}
+
 			time.Sleep(50 * time.Millisecond)
 			os.Exit(0)
 		}
