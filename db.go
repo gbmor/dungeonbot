@@ -47,19 +47,19 @@ type MonsterRow struct {
 func pastebin(pastebin string, input string) (string, error) {
 	pbconn, err := net.Dial("tcp", pastebin)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Error connecting to pastebin service: %w", err)
 	}
 	defer pbconn.Close()
 
 	_, err = pbconn.Write([]byte(input))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Error sending data to pastebin service: %w", err)
 	}
 
 	pbRdr := bufio.NewReader(pbconn)
 	pbBytes, _, err := pbRdr.ReadLine()
 	if err != nil {
-		return "", nil
+		return "", fmt.Errorf("Error reading response from pastebin service: %w", err)
 	}
 
 	return string(pbBytes), err
@@ -69,7 +69,7 @@ func (db *DB) init() error {
 	var err error
 	db.conn, err = sql.Open("sqlite3", "./dungeonbot.db")
 	if err != nil {
-		return fmt.Errorf("Failed to open database: %s", err.Error())
+		return fmt.Errorf("Failed to open database: %w", err)
 	}
 
 	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS pcs (
@@ -79,7 +79,7 @@ func (db *DB) init() error {
 		notes TEXT
 	);`)
 	if err != nil {
-		return fmt.Errorf("Couldn't create-if-not-exists table `pcs`")
+		return fmt.Errorf("Couldn't create-if-not-exists table `pcs`: %w", err)
 	}
 
 	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
@@ -87,7 +87,7 @@ func (db *DB) init() error {
 		notes TEXT
 	);`)
 	if err != nil {
-		return fmt.Errorf("Couldn't create-if-not-exists table `campaigns`")
+		return fmt.Errorf("Couldn't create-if-not-exists table `campaigns`: %w", err)
 	}
 
 	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS npcs (
@@ -95,7 +95,7 @@ func (db *DB) init() error {
 		notes TEXT
 	);`)
 	if err != nil {
-		return fmt.Errorf("Couldn't create-if-not-exists table `npcs`'")
+		return fmt.Errorf("Couldn't create-if-not-exists table `npcs`: %w", err)
 	}
 
 	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS monsters (
@@ -103,7 +103,7 @@ func (db *DB) init() error {
 		notes TEXT
 	);`)
 	if err != nil {
-		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`")
+		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`: %w", err)
 	}
 
 	return nil
@@ -111,7 +111,7 @@ func (db *DB) init() error {
 
 func (db *DB) getCampaignNotes(campaign string) (string, error) {
 	if err := db.conn.Ping(); err != nil {
-		return "", fmt.Errorf("Couldn't ping database: %s", err.Error())
+		return "", fmt.Errorf("Couldn't ping database: %w", err)
 	}
 
 	row := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:campname", campaign)
@@ -126,17 +126,17 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 
 func (db *DB) createCampaign(name string) error {
 	if err := db.conn.Ping(); err != nil {
-		return fmt.Errorf("Couldn't ping database: %s", err.Error())
+		return fmt.Errorf("Couldn't ping database: %w", err)
 	}
 
 	tx, err := db.conn.Begin()
 	if err != nil {
-		return fmt.Errorf("Couldn't begin transaction: %s", err.Error())
+		return fmt.Errorf("Couldn't begin transaction: %w", err)
 	}
 
 	_, err = tx.Exec("INSERT INTO campaigns (name, notes) VALUES(?, ?)", name, "")
 	if err != nil {
-		return fmt.Errorf("Couldn't execute statement: %s", err.Error())
+		return fmt.Errorf("Couldn't execute statement: %w", err)
 	}
 
 	return tx.Commit()

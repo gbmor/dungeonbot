@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -31,15 +32,15 @@ func parseDice(s string) (string, error) {
 
 	diceNum, err := strconv.Atoi(split[0])
 	if err != nil {
-		return "", fmt.Errorf("unable to parse dice quantity")
+		return "", errors.New("unable to parse dice quantity")
 	}
 	if diceNum > 100 {
-		return "", fmt.Errorf("too many dice jfc")
+		return "", errors.New("too many dice jfc")
 	}
 
 	diceCeiling, err := strconv.Atoi(plusRaw[0])
 	if err != nil {
-		return "", fmt.Errorf("unable to parse die type")
+		return "", errors.New("unable to parse die type")
 	}
 
 	valid := false
@@ -50,7 +51,7 @@ func parseDice(s string) (string, error) {
 		}
 	}
 	if !valid {
-		return "", fmt.Errorf("invalid dice type")
+		return "", errors.New("invalid dice type")
 	}
 
 	out := ""
