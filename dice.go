@@ -10,8 +10,8 @@ import (
 
 var validDice []int = []int{4, 6, 8, 10, 12, 20, 100}
 
+// [0,n] exclusive on the upper bound
 func getRoll(ceiling int) int {
-	// [0,n] exclusive on the upper bound
 	out := rand.Intn(ceiling)
 	return out + 1
 }

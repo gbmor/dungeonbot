@@ -3,6 +3,10 @@ user: 'dungeonbot'
 chans: '#ttrpg,#ttrpg-ooc'
 server: 'irc.example.com'
 port: 6697
-ssl: true
+tls: true
 
 pastebin_url: 'termbin.com:9999'
+
+## Set debug_mode to false to suppress verbose output
+## to the terminal when running dungeonbot
+debug_mode: true

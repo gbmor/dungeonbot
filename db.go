@@ -51,8 +51,7 @@ func pastebin(pastebin string, input string) (string, error) {
 	}
 	defer pbconn.Close()
 
-	_, err = pbconn.Write([]byte(input))
-	if err != nil {
+	if _, err := pbconn.Write([]byte(input)); err != nil {
 		return "", fmt.Errorf("Error sending data to pastebin service: %w", err)
 	}
 
@@ -67,42 +66,37 @@ func pastebin(pastebin string, input string) (string, error) {
 
 func (db *DB) init() error {
 	var err error
-	db.conn, err = sql.Open("sqlite3", "./dungeonbot.db")
-	if err != nil {
+	if db.conn, err = sql.Open("sqlite3", "./dungeonbot.db"); err != nil {
 		return fmt.Errorf("Failed to open database: %w", err)
 	}
 
-	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS pcs (
+	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS pcs (
 		nick TEXT NOT NULL,
 		campaign TEXT NOT NULL,
 		char TEXT NOT NULL,
 		notes TEXT
-	);`)
-	if err != nil {
+	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `pcs`: %w", err)
 	}
 
-	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
+	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
 		name TEXT NOT NULL UNIQUE,
 		notes TEXT
-	);`)
-	if err != nil {
+	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `campaigns`: %w", err)
 	}
 
-	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS npcs (
+	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS npcs (
 		name TEXT NOT NULL UNIQUE,
 		notes TEXT
-	);`)
-	if err != nil {
+	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `npcs`: %w", err)
 	}
 
-	_, err = db.conn.Exec(`CREATE TABLE IF NOT EXISTS monsters (
+	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS monsters (
 		name TEXT NOT NULL UNIQUE,
 		notes TEXT
-	);`)
-	if err != nil {
+	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`: %w", err)
 	}
 

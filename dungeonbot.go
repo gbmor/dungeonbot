@@ -14,17 +14,18 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-// VERSION is the dungeonbot version
+// VERSION is set by make
 var VERSION = ""
 
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
+	debug       bool
 	nick        string
 	user        string
 	chans       []string
 	server      string
 	port        uint
-	ssl         bool
+	tls         bool
 	pastebinURL string
 }
 
@@ -42,8 +43,8 @@ func main() {
 
 	conn := irc.IRC(conf.nick, conf.user)
 	conn.VerboseCallbackHandler = false
-	conn.Debug = true
-	conn.UseTLS = conf.ssl
+	conn.Debug = conf.debug
+	conn.UseTLS = conf.tls
 	conn.TLSConfig = &tls.Config{InsecureSkipVerify: false}
 
 	db := &DB{}
@@ -75,11 +76,13 @@ func main() {
 				conn.Privmsg(target, "Missing dice argument. Eg: !roll 1d20")
 				return
 			}
+
 			out, err := parseDice(msg[1])
 			if err != nil {
 				conn.Privmsgf(target, "%s", err.Error())
 				return
 			}
+
 			conn.Privmsgf(target, "%s", out)
 
 		case "!campaign":
@@ -149,18 +152,18 @@ func buildConf() Config {
 		log.Fatalf("Error reading config file: %s", err.Error())
 	}
 
-	pbURL := viper.GetString("pastebin_url")
 	chanWhole := viper.GetString("chans")
 	chanSep := strings.Split(chanWhole, ",")
 
 	return Config{
+		debug:       viper.GetBool("debug_mode"),
 		nick:        viper.GetString("nick"),
 		user:        viper.GetString("user"),
 		chans:       chanSep,
 		server:      viper.GetString("server"),
 		port:        viper.GetUint("port"),
-		ssl:         viper.GetBool("ssl"),
-		pastebinURL: pbURL,
+		tls:         viper.GetBool("tls"),
+		pastebinURL: viper.GetString("pastebin_url"),
 	}
 }
 
@@ -173,8 +176,7 @@ func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB) {
 			log.Printf("\n\nCaught %v\n", sigint)
 			conn.SendRawf("QUIT /me yeet %s", nick)
 
-			err := db.Close()
-			if err != nil {
+			if err := db.Close(); err != nil {
 				log.Printf("Error closing database connection: %s", err.Error())
 			}
 
