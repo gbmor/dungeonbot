@@ -115,6 +115,9 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 
 	crow := &CampaignRow{}
 	row.Scan(&crow.name, &crow.notes)
+	if crow.notes == "" {
+		return "", fmt.Errorf("No campaign notes for '%s'", campaign)
+	}
 	return crow.notes, nil
 }
 

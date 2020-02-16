@@ -123,6 +123,11 @@ func main() {
 
 			switch subcommand {
 			case "campaign":
+				if err := db.createCampaign(msg[2]); err != nil {
+					conn.Privmsgf(target, "Error creating campaign")
+					log.Printf("When creating campaign '%s': %s", msg[2], err.Error())
+				}
+				conn.Privmsgf(target, "Campaign '%s' created", msg[2])
 			case "pc":
 			case "npc":
 			case "monster":
