@@ -91,7 +91,7 @@ func Test_createCampaign(t *testing.T) {
 		}
 
 		_, err = db.getCampaignNotes("testcampaign")
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "No campaign notes") {
 			t.Errorf("%s", err.Error())
 		}
 	})
