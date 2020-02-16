@@ -4,6 +4,8 @@
 
 IRC bot to aid in tabletop-style RPG adventures.
 
+Requires `go 1.13.x`
+
 ## Goals
 
 - [x] Dice rolling
