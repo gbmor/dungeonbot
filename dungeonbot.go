@@ -17,6 +17,9 @@ import (
 // VERSION is set by make
 var VERSION = ""
 
+// HELPTEXT contains usage information
+const HELPTEXT = "!roll NdN[+-N]: roll dice or a die with optional modifier. Eg: !roll 1d20+4"
+
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
 	debug       bool
@@ -56,12 +59,8 @@ func main() {
 		}
 	})
 
-	conn.AddCallback("*", func(e *irc.Event) {
+	conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		splitRaw := strings.Split(e.Raw, " ")
-		if splitRaw[0] == "PING" {
-			e.Connection.SendRawf("PONG %s", splitRaw[1])
-			return
-		}
 		target := splitRaw[2]
 
 		if strings.HasPrefix(e.Message(), "rain drop") {
@@ -70,17 +69,26 @@ func main() {
 		}
 
 		msg := strings.Split(e.Message(), " ")
+
+		if len(msg) < 1 {
+			return
+		}
+
+		if msg[0] == "!help" || msg[0] == "dungeonbot:" {
+			conn.Privmsg(target, HELPTEXT)
+		}
+
 		switch msg[0] {
 		case "!roll":
 			if len(msg) < 2 {
 				conn.Privmsg(target, "Missing dice argument. Eg: !roll 1d20")
-				return
+				break
 			}
 
 			out, err := parseDice(msg[1])
 			if err != nil {
 				conn.Privmsgf(target, "%s", err.Error())
-				return
+				break
 			}
 
 			conn.Privmsgf(target, "%s", out)
@@ -88,7 +96,7 @@ func main() {
 		case "!campaign":
 			if len(msg) < 2 {
 				conn.Privmsgf(target, "Missing campaign name. Eg: !campaign gronkulousness")
-				return
+				break
 			}
 
 			arg := strings.Join(msg[1:], " ")
@@ -98,14 +106,14 @@ func main() {
 			if err != nil {
 				conn.Privmsgf(target, "No campaign notes for %s", arg)
 				log.Printf("%s", err.Error())
-				return
+				break
 			}
 
 			pbURL, err := pastebin(conf.pastebinURL, raw)
 			if err != nil {
 				conn.Privmsgf(target, "Error connecting to pastebin service")
 				log.Printf("%s", err.Error())
-				return
+				break
 			}
 
 			conn.Privmsgf(target, "%s", pbURL)
@@ -113,11 +121,11 @@ func main() {
 		case "!add":
 			if len(msg) < 2 {
 				conn.Privmsgf(target, "Missing subcommand: campaign|pc|npc|monster")
-				return
+				break
 			}
 			if len(msg) < 3 {
 				conn.Privmsgf(target, "Missing argument. Eg: !add campaign gronkulousness")
-				return
+				break
 			}
 			subcommand := msg[1]
 
