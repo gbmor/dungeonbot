@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -108,15 +109,18 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 		return "", fmt.Errorf("Couldn't ping database: %w", err)
 	}
 
-	row := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:campname", campaign)
+	row := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:campaign", sql.Named("campaign", campaign))
 	if row == nil {
 		return "", fmt.Errorf("Couldn't query row in table campaigns, campaign: %s", campaign)
 	}
 
-	crow := &CampaignRow{}
-	row.Scan(&crow.name, &crow.notes)
+	crow := CampaignRow{}
+	err := row.Scan(&crow.name, &crow.notes)
+	if err != nil {
+		return "", fmt.Errorf("Querying campaign notes: %w", err)
+	}
 	if crow.notes == "" {
-		return "", fmt.Errorf("No campaign notes for '%s'", campaign)
+		return "", fmt.Errorf("No campaign notes for '%s':\n\t%v\n%v\n", campaign, row, crow)
 	}
 	return crow.notes, nil
 }
@@ -132,6 +136,37 @@ func (db *DB) createCampaign(name string) error {
 	}
 
 	_, err = tx.Exec("INSERT INTO campaigns (name, notes) VALUES(?, ?)", name, "")
+	if err != nil {
+		return fmt.Errorf("Couldn't execute statement: %w", err)
+	}
+
+	return tx.Commit()
+}
+
+func (db *DB) appendCampaign(name, note string) error {
+	if name == "" || note == "" {
+		return errors.New("invalid name or note")
+	}
+	if err := db.conn.Ping(); err != nil {
+		return fmt.Errorf("Couldn't ping database: %w", err)
+	}
+
+	rowRaw := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:name", name)
+	if rowRaw == nil {
+		return fmt.Errorf("Couldn't retrieve campaign notes to append, campaign: %s", name)
+	}
+
+	row := &CampaignRow{}
+	rowRaw.Scan(&row.name, &row.notes)
+
+	row.notes = fmt.Sprintf("%s%s\n\n", row.notes, note)
+
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("Couldn't begin transaction: %w", err)
+	}
+
+	_, err = tx.Exec("INSERT OR REPLACE INTO campaigns (name, notes) VALUES(?, ?)", row.name, row.notes)
 	if err != nil {
 		return fmt.Errorf("Couldn't execute statement: %w", err)
 	}

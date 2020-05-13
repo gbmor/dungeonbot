@@ -18,7 +18,12 @@ import (
 var VERSION = ""
 
 // HELPTEXT contains usage information
-const HELPTEXT = "!roll NdN[+-N]: roll dice or a die with optional modifier. Eg: !roll 1d20+4"
+var HELPTEXT = []string{
+	"!roll NdN[+-N]: roll dice or a die with optional modifier. Eg: !roll 1d20+4",
+	"!add [campaign] $NAME: add a campaign entry called $NAME",
+	"!append [campaign] $NAME $NOTE: append $NOTE to a campaign called $NAME",
+	"!campaign $NAME: retrieve the campaign notes for $NAME",
+}
 
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
@@ -75,7 +80,9 @@ func main() {
 		}
 
 		if msg[0] == "!help" || msg[0] == "dungeonbot:" {
-			conn.Privmsg(target, HELPTEXT)
+			for _, e := range HELPTEXT {
+				conn.Privmsg(target, e)
+			}
 		}
 
 		switch msg[0] {
@@ -134,6 +141,7 @@ func main() {
 				if err := db.createCampaign(msg[2]); err != nil {
 					conn.Privmsgf(target, "Error creating campaign")
 					log.Printf("When creating campaign '%s': %s", msg[2], err.Error())
+					break
 				}
 				conn.Privmsgf(target, "Campaign '%s' created", msg[2])
 			case "pc":
@@ -142,6 +150,27 @@ func main() {
 			}
 
 		case "!append":
+			if len(msg) < 2 {
+				conn.Privmsgf(target, "Missing subcommand: campaign|pc|npc|monster")
+				break
+			}
+			if len(msg) < 3 {
+				conn.Privmsgf(target, "Missing argument. Eg: !append campaign gronkulousness")
+			}
+			if len(msg) < 4 {
+				conn.Privmsgf(target, "Missing argument. Eg: !append campaign gronkulousness Don't trust the shopkeep in Grokuloustown")
+			}
+			note := strings.Join(msg[3:], " ")
+			subcommand := msg[1]
+			switch subcommand {
+			case "campaign":
+				if err := db.appendCampaign(msg[2], note); err != nil {
+					conn.Privmsgf(target, "Error appending note")
+					log.Printf("When appending to notes for campaign '%s': %s", msg[2], err.Error())
+					break
+				}
+				conn.Privmsgf(target, "Note appended to campaign '%s'", msg[2])
+			}
 		case "!clear":
 		case "!delete":
 		}
@@ -194,7 +223,7 @@ func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB) {
 			}
 
 			time.Sleep(50 * time.Millisecond)
-			os.Exit(0)
+			os.Exit(1)
 		}
 	}()
 }
