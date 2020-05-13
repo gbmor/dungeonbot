@@ -106,7 +106,7 @@ func main() {
 				break
 			}
 
-			arg := strings.Join(msg[1:], " ")
+			arg := strings.ToLower(strings.Join(msg[1:], " "))
 			conn.Privmsgf(target, "Looking for %s campaign notes...", arg)
 
 			raw, err := db.getCampaignNotes(arg)
@@ -135,10 +135,11 @@ func main() {
 				break
 			}
 			subcommand := msg[1]
+			name := strings.ToLower(msg[2])
 
 			switch subcommand {
 			case "campaign":
-				if err := db.createCampaign(msg[2]); err != nil {
+				if err := db.createCampaign(name); err != nil {
 					conn.Privmsgf(target, "Error creating campaign")
 					log.Printf("When creating campaign '%s': %s", msg[2], err.Error())
 					break
@@ -162,9 +163,10 @@ func main() {
 			}
 			note := strings.Join(msg[3:], " ")
 			subcommand := msg[1]
+			name := strings.ToLower(msg[2])
 			switch subcommand {
 			case "campaign":
-				if err := db.appendCampaign(msg[2], note); err != nil {
+				if err := db.appendCampaign(name, note); err != nil {
 					conn.Privmsgf(target, "Error appending note")
 					log.Printf("When appending to notes for campaign '%s': %s", msg[2], err.Error())
 					break
