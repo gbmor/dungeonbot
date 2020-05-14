@@ -8,11 +8,11 @@ import (
 func Test_pastebin(t *testing.T) {
 	go t.Run("pastebin", func(t *testing.T) {
 		egress := "this is a test paste"
-		ingress, err := pastebin("termbin.com:9999", egress)
+		ingress, err := pastebin("https://ttm.sh", egress)
 		if err != nil {
 			t.Error(err)
 		}
-		if !strings.HasPrefix(ingress, "https://termbin.com/") {
+		if !strings.HasPrefix(ingress, "https://ttm.sh/") {
 			t.Errorf("Expected %s, got %s", egress, ingress)
 		}
 	})
@@ -93,6 +93,35 @@ func Test_createCampaign(t *testing.T) {
 		_, err = db.getCampaignNotes("testcampaign")
 		if err != nil && !strings.Contains(err.Error(), "No campaign notes") {
 			t.Errorf("%s", err.Error())
+		}
+	})
+}
+
+func Test_appendCampaign(t *testing.T) {
+	t.Run("append campaign notes", func(t *testing.T) {
+		db := &DB{}
+		err := db.init()
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+		defer db.conn.Close()
+
+		err = db.createCampaign("foocampaign")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+
+		err = db.appendCampaign("foocampaign", "some notes go here")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+
+		row := CampaignRow{}
+		rrow := db.conn.QueryRow("SELECT * FROM campaigns WHERE name='foocampaign'")
+		rrow.Scan(&row.name, &row.notes)
+
+		if row.notes != "some notes go here\n\n" {
+			t.Errorf("Got \"%s\", expected \"some notes go here\"", row.notes)
 		}
 	})
 }
