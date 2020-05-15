@@ -9,10 +9,10 @@ Requires `go 1.13.x`
 ## Goals
 
 - [x] Dice rolling
+- [x] Campaign notes for players
 - [ ] NPC storage/recall
 - [ ] Monster storage/recall
 - [ ] PC quick reference
-- [ ] Campaign notes for players
 
 ## License
 
