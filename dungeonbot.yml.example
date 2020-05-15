@@ -1,14 +1,14 @@
-nick: 'dungeonbot'
-user: 'dungeonbot'
-chans: '#ttrpg,#ttrpg-ooc'
-server: 'irc.example.com'
+nick: "dungeonbot"
+user: "dungeonbot"
+chans: "#ttrpg,#ttrpg-ooc"
+server: "irc.example.com"
 port: 6697
 tls: true
-
-pastebin_url: 'termbin.com:9999'
+signoff: "🎵 Give me the yeet b0is and free my soul! I wanna get tossed in a fuckin' hole and drift away! 🎵"
+pastebin_url: "termbin.com:9999"
 
 # set to ':memory:' for an in-memory database
-database_location: 'dungeonbot.db'
+database_location: "dungeonbot.db"
 
 ## Set debug_mode to false to suppress verbose output
 ## to the terminal when running dungeonbot

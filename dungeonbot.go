@@ -36,6 +36,7 @@ type Config struct {
 	tls         bool
 	pastebinURL string
 	dbLocation  string
+	signOff     string
 }
 
 func main() {
@@ -96,15 +97,15 @@ func main() {
 
 			out, err := parseDice(msg[1])
 			if err != nil {
-				conn.Privmsgf(target, "%s", err.Error())
+				conn.Privmsg(target, err.Error())
 				break
 			}
 
-			conn.Privmsgf(target, "%s", out)
+			conn.Privmsg(target, out)
 
 		case "!campaign":
 			if len(msg) < 2 {
-				conn.Privmsgf(target, "Missing campaign name. Eg: !campaign gronkulousness")
+				conn.Privmsg(target, "Missing campaign name. Eg: !campaign gronkulousness")
 				break
 			}
 
@@ -120,20 +121,17 @@ func main() {
 
 			pbURL, err := pastebin(conf.pastebinURL, raw)
 			if err != nil {
-				conn.Privmsgf(target, "Error connecting to pastebin service")
+				conn.Privmsg(target, "Error connecting to pastebin service")
 				log.Printf("%s", err.Error())
 				break
 			}
 
-			conn.Privmsgf(target, "%s", pbURL)
+			conn.Privmsg(target, pbURL)
 
 		case "!add":
-			if len(msg) < 2 {
-				conn.Privmsgf(target, "Missing subcommand: campaign|pc|npc|monster")
-				break
-			}
+			const argsError = "Incorrect arguments. Eg: !add [campaign|monster|npc|pc] gronkulousness"
 			if len(msg) < 3 {
-				conn.Privmsgf(target, "Missing argument. Eg: !add campaign gronkulousness")
+				conn.Privmsg(target, argsError)
 				break
 			}
 			subcommand := strings.ToLower(msg[1])
@@ -142,28 +140,25 @@ func main() {
 			switch subcommand {
 			case "campaign":
 				if err := db.createCampaign(name, user); err != nil {
-					conn.Privmsgf(target, "Error creating campaign")
+					conn.Privmsg(target, "Error creating campaign")
 					log.Printf("When creating campaign '%s': %s", msg[2], err.Error())
 					break
 				}
 				conn.Privmsgf(target, "Campaign '%s' created", msg[2])
-			case "pc":
-			case "npc":
 			case "monster":
+				conn.Privmsg(target, "unimplemented")
+			case "pc":
+				conn.Privmsg(target, "unimplemented")
+			case "npc":
+				conn.Privmsg(target, "unimplemented")
+			default:
+				conn.Privmsg(target, argsError)
 			}
 
 		case "!adduser":
-			const argsError = "Missing arguments. Eg: !adduser [campaign|pc|npc|monster] gronkulousness somenerd"
-			if len(msg) < 2 {
-				conn.Privmsgf(target, argsError)
-				break
-			}
-			if len(msg) < 3 {
-				conn.Privmsgf(target, argsError)
-				break
-			}
+			const argsError = "Incorrect arguments. Eg: !adduser [campaign|monster|npc|pc] gronkulousness somenerd"
 			if len(msg) < 4 {
-				conn.Privmsgf(target, argsError)
+				conn.Privmsg(target, argsError)
 				break
 			}
 
@@ -180,23 +175,24 @@ func main() {
 					} else {
 						resp = "Error adding user to user list"
 					}
-					conn.Privmsgf(target, resp)
+					conn.Privmsg(target, resp)
 					log.Printf("When adding user to campaign '%s': %s", user, err.Error())
 					break
 				}
 				conn.Privmsgf(target, "User '%s' added to campaign '%s'", msg[3], msg[2])
+			case "monster":
+				conn.Privmsg(target, "unimplemented")
+			case "npc":
+				conn.Privmsg(target, "unimplemented")
+			case "pc":
+				conn.Privmsg(target, "unimplemented")
+			default:
+				conn.Privmsg(target, argsError)
 			}
 		case "!append":
-			if len(msg) < 2 {
-				conn.Privmsgf(target, "Missing subcommand: campaign|pc|npc|monster")
-				break
-			}
-			if len(msg) < 3 {
-				conn.Privmsgf(target, "Missing argument. Eg: !append campaign gronkulousness")
-				break
-			}
+			const argsError = "Incorrect arguments. Eg: !append [campaign|monster|npc|pc] gronkulousness The saxophone is a mimic"
 			if len(msg) < 4 {
-				conn.Privmsgf(target, "Missing argument. Eg: !append campaign gronkulousness Don't trust the shopkeep in Grokuloustown")
+				conn.Privmsg(target, argsError)
 				break
 			}
 			note := strings.Join(msg[3:], " ")
@@ -212,18 +208,28 @@ func main() {
 					} else {
 						resp = "Error appending note"
 					}
-					conn.Privmsgf(target, resp)
+					conn.Privmsg(target, resp)
 					log.Printf("When appending to notes for campaign '%s': %s", msg[2], err.Error())
 					break
 				}
 				conn.Privmsgf(target, "Note appended to campaign '%s'", msg[2])
+			case "monster":
+				conn.Privmsg(target, "unimplemented")
+			case "pc":
+				conn.Privmsg(target, "unimplemented")
+			case "npc":
+				conn.Privmsg(target, "unimplemented")
+			default:
+				conn.Privmsg(target, argsError)
 			}
 		case "!clear":
+			conn.Privmsg(target, "unimplemented")
 		case "!delete":
+			conn.Privmsgf(target, "unimplemented")
 		}
 	})
 
-	watchForInterrupt(conn, conf.nick, db.conn)
+	watchForInterrupt(conn, conf.nick, db.conn, &conf)
 
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
@@ -253,24 +259,28 @@ func buildConf() Config {
 		port:        viper.GetUint("port"),
 		tls:         viper.GetBool("tls"),
 		pastebinURL: viper.GetString("pastebin_url"),
-		dbLocation: viper.GetString("database_location"),
+		dbLocation:  viper.GetString("database_location"),
+		signOff:     viper.GetString("signoff"),
 	}
 }
 
-func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB) {
+func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB, conf *Config) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
 	go func() {
 		for sigint := range c {
 			log.Printf("\n\nCaught %v\n", sigint)
-			conn.SendRawf("QUIT /me yeet %s", nick)
+			for _, e := range conf.chans {
+				conn.Privmsg(e, conf.signOff)
+			}
+			conn.Quit()
 
 			if err := db.Close(); err != nil {
 				log.Printf("Error closing database connection: %s", err.Error())
 			}
 
-			time.Sleep(50 * time.Millisecond)
+			time.Sleep(150 * time.Millisecond)
 			os.Exit(1)
 		}
 	}()
