@@ -74,6 +74,7 @@ func main() {
 		}
 
 		msg := strings.Split(e.Message(), " ")
+		user := strings.ToLower(e.Nick)
 
 		if len(msg) < 1 {
 			return
@@ -134,12 +135,12 @@ func main() {
 				conn.Privmsgf(target, "Missing argument. Eg: !add campaign gronkulousness")
 				break
 			}
-			subcommand := msg[1]
+			subcommand := strings.ToLower(msg[1])
 			name := strings.ToLower(msg[2])
 
 			switch subcommand {
 			case "campaign":
-				if err := db.createCampaign(name); err != nil {
+				if err := db.createCampaign(name, user); err != nil {
 					conn.Privmsgf(target, "Error creating campaign")
 					log.Printf("When creating campaign '%s': %s", msg[2], err.Error())
 					break
@@ -150,6 +151,40 @@ func main() {
 			case "monster":
 			}
 
+		case "!adduser":
+			const argsError = "Missing arguments. Eg: !adduser [campaign|pc|npc|monster] gronkulousness somenerd"
+			if len(msg) < 2 {
+				conn.Privmsgf(target, argsError)
+				break
+			}
+			if len(msg) < 3 {
+				conn.Privmsgf(target, argsError)
+				break
+			}
+			if len(msg) < 4 {
+				conn.Privmsgf(target, argsError)
+				break
+			}
+
+			subcommand := strings.ToLower(msg[1])
+			name := strings.ToLower(msg[2])
+			newuser := strings.ToLower(msg[3])
+
+			switch subcommand {
+			case "campaign":
+				if err := db.addCampaignUser(name, user, newuser); err != nil {
+					resp := ""
+					if strings.Contains(err.Error(), "Not authorized") {
+						resp = "Not authorized to modify user list"
+					} else {
+						resp = "Error adding user to user list"
+					}
+					conn.Privmsgf(target, resp)
+					log.Printf("When adding user to campaign '%s': %s", user, err.Error())
+					break
+				}
+				conn.Privmsgf(target, "User '%s' added to campaign '%s'", msg[3], msg[2])
+			}
 		case "!append":
 			if len(msg) < 2 {
 				conn.Privmsgf(target, "Missing subcommand: campaign|pc|npc|monster")
@@ -157,17 +192,26 @@ func main() {
 			}
 			if len(msg) < 3 {
 				conn.Privmsgf(target, "Missing argument. Eg: !append campaign gronkulousness")
+				break
 			}
 			if len(msg) < 4 {
 				conn.Privmsgf(target, "Missing argument. Eg: !append campaign gronkulousness Don't trust the shopkeep in Grokuloustown")
+				break
 			}
 			note := strings.Join(msg[3:], " ")
-			subcommand := msg[1]
+			subcommand := strings.ToLower(msg[1])
 			name := strings.ToLower(msg[2])
+
 			switch subcommand {
 			case "campaign":
-				if err := db.appendCampaign(name, note); err != nil {
-					conn.Privmsgf(target, "Error appending note")
+				if err := db.appendCampaign(name, note, user); err != nil {
+					resp := ""
+					if strings.Contains(err.Error(), "Not authorized") {
+						resp = "not authorized to modify campaign notes"
+					} else {
+						resp = "Error appending note"
+					}
+					conn.Privmsgf(target, resp)
 					log.Printf("When appending to notes for campaign '%s': %s", msg[2], err.Error())
 					break
 				}

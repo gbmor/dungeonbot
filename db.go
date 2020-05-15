@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -19,7 +20,7 @@ type DB struct {
 
 // PCRow holds a given row from the database
 type PCRow struct {
-	nick     string
+	user     string
 	campaign string
 	char     string
 	notes    string
@@ -28,12 +29,14 @@ type PCRow struct {
 // CampaignRow holds a given row from table campaigns
 type CampaignRow struct {
 	name  string
+	users string
 	notes string
 }
 
 // NPCRow holds a given row from table npcs
 type NPCRow struct {
 	name  string
+	users string
 	stats string
 	notes string
 }
@@ -41,6 +44,7 @@ type NPCRow struct {
 // MonsterRow holds a given row from table monsters
 type MonsterRow struct {
 	name  string
+	users string
 	stats string
 	notes string
 }
@@ -72,7 +76,7 @@ func (db *DB) init(path string) error {
 	}
 
 	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS pcs (
-		nick TEXT NOT NULL,
+		user TEXT NOT NULL,
 		campaign TEXT NOT NULL,
 		char TEXT NOT NULL,
 		notes TEXT
@@ -82,6 +86,7 @@ func (db *DB) init(path string) error {
 
 	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
 		name TEXT NOT NULL UNIQUE,
+                users TEXT NOT NULL,
 		notes TEXT
 	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `campaigns`: %w", err)
@@ -89,6 +94,7 @@ func (db *DB) init(path string) error {
 
 	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS npcs (
 		name TEXT NOT NULL UNIQUE,
+                users TEXT NOT NULL,
 		notes TEXT
 	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `npcs`: %w", err)
@@ -96,6 +102,7 @@ func (db *DB) init(path string) error {
 
 	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS monsters (
 		name TEXT NOT NULL UNIQUE,
+                users TEXT NOT NULL,
 		notes TEXT
 	);`); err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`: %w", err)
@@ -115,7 +122,7 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 	}
 
 	crow := CampaignRow{}
-	err := row.Scan(&crow.name, &crow.notes)
+	err := row.Scan(&crow.name, &crow.users, &crow.notes)
 	if err != nil {
 		return "", fmt.Errorf("Querying campaign notes: %w", err)
 	}
@@ -125,7 +132,7 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 	return crow.notes, nil
 }
 
-func (db *DB) createCampaign(name string) error {
+func (db *DB) createCampaign(name, user string) error {
 	if err := db.conn.Ping(); err != nil {
 		return fmt.Errorf("Couldn't ping database: %w", err)
 	}
@@ -135,7 +142,7 @@ func (db *DB) createCampaign(name string) error {
 		return fmt.Errorf("Couldn't begin transaction: %w", err)
 	}
 
-	_, err = tx.Exec("INSERT INTO campaigns (name, notes) VALUES(?, ?)", name, "")
+	_, err = tx.Exec("INSERT INTO campaigns (name, users, notes) VALUES(?, ?, ?)", name, user, "")
 	if err != nil {
 		return fmt.Errorf("Couldn't execute statement: %w", err)
 	}
@@ -143,7 +150,7 @@ func (db *DB) createCampaign(name string) error {
 	return tx.Commit()
 }
 
-func (db *DB) appendCampaign(name, note string) error {
+func (db *DB) appendCampaign(name, note, user string) error {
 	if name == "" || note == "" {
 		return errors.New("invalid name or note")
 	}
@@ -156,8 +163,12 @@ func (db *DB) appendCampaign(name, note string) error {
 		return fmt.Errorf("Couldn't retrieve campaign notes to append, campaign: %s", name)
 	}
 
-	row := &CampaignRow{}
-	rowRaw.Scan(&row.name, &row.notes)
+	row := CampaignRow{}
+	rowRaw.Scan(&row.name, &row.users, &row.notes)
+
+	if !strings.Contains(row.users, user) {
+		return errors.New("Not authorized to modify campaign notes")
+	}
 
 	row.notes = fmt.Sprintf("%s%s\n\n", row.notes, note)
 
@@ -166,9 +177,51 @@ func (db *DB) appendCampaign(name, note string) error {
 		return fmt.Errorf("Couldn't begin transaction: %w", err)
 	}
 
-	_, err = tx.Exec("INSERT OR REPLACE INTO campaigns (name, notes) VALUES(?, ?)", row.name, row.notes)
+	_, err = tx.Exec("INSERT OR REPLACE INTO campaigns (name, users, notes) VALUES(?, ?, ?)", row.name, row.users, row.notes)
 	if err != nil {
 		return fmt.Errorf("Couldn't execute statement: %w", err)
+	}
+
+	return tx.Commit()
+}
+
+func (db *DB) addCampaignUser(name, requser, user string) error {
+	if name == "" || user == "" {
+		return errors.New("Invalid campaign or user")
+	}
+	if strings.ContainsAny(user, " \t") {
+		return errors.New("usernames cannot contain whitespace")
+	}
+	if err := db.conn.Ping(); err != nil {
+		return fmt.Errorf("Couldn't ping database: %w", err)
+	}
+
+	rowRaw := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:name", name)
+	if rowRaw == nil {
+		return fmt.Errorf("Couldn't retrieve campaign row. Campaign: %s", name)
+	}
+
+	row := CampaignRow{}
+	rowRaw.Scan(&row.name, &row.users, &row.notes)
+
+	if !strings.Contains(row.users, requser) {
+		return errors.New("Not authorized to modify campaign")
+	}
+
+	if strings.Contains(row.users, user) {
+		return errors.New("User already authorized")
+	}
+
+	row.users += fmt.Sprintf(" %s", strings.TrimSpace(user))
+
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec("INSERT OR REPLACE INTO campaigns (name, users, notes) VALUES(?, ?, ?)", row.name, row.users, row.notes)
+	if err != nil {
+		return err
 	}
 
 	return tx.Commit()

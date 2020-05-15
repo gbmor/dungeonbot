@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -40,18 +41,18 @@ func Test_DB_init(t *testing.T) {
 		db := beginDBTest()
 		defer endDBTest(db)
 
-		_, err := db.conn.Exec("INSERT OR REPLACE INTO pcs (nick, campaign, char, notes) VALUES(?, ?, ?, ?);", "foobat", "testCampaign", "testPlayer", "some notes")
+		_, err := db.conn.Exec("INSERT OR REPLACE INTO pcs (user, campaign, char, notes) VALUES(?, ?, ?, ?);", "foobat", "testCampaign", "testPlayer", "some notes")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
 
 		row := PCRow{}
 		tmprow := db.conn.QueryRow("SELECT * FROM pcs WHERE campaign='testCampaign'")
-		err = tmprow.Scan(&row.nick, &row.campaign, &row.char, &row.notes)
+		err = tmprow.Scan(&row.user, &row.campaign, &row.char, &row.notes)
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
-		if row.nick != "foobat" {
+		if row.user != "foobat" {
 			t.Errorf("Did not retrieve nick name")
 		}
 		if row.campaign != "testCampaign" {
@@ -71,7 +72,7 @@ func Test_getCampaignNotes(t *testing.T) {
 		db := beginDBTest()
 		defer endDBTest(db)
 
-		_, err := db.conn.Exec("INSERT OR REPLACE INTO campaigns (name, notes) VALUES(?, ?)", "gronkulousness", "degronklified the dragon on 13 feb")
+		_, err := db.conn.Exec("INSERT OR REPLACE INTO campaigns (name, users, notes) VALUES(?, ?, ?)", "gronkulousness", "dungeonbot", "degronklified the dragon on 13 feb")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
@@ -91,7 +92,7 @@ func Test_createCampaign(t *testing.T) {
 		db := beginDBTest()
 		defer endDBTest(db)
 
-		err := db.createCampaign("testcampaign")
+		err := db.createCampaign("testcampaign", "dungeonbot")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
@@ -108,22 +109,57 @@ func Test_appendCampaign(t *testing.T) {
 		db := beginDBTest()
 		defer endDBTest(db)
 
-		err := db.createCampaign("foocampaign")
+		err := db.createCampaign("foocampaign", "dungeonbot")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
 
-		err = db.appendCampaign("foocampaign", "some notes go here")
+		err = db.appendCampaign("foocampaign", "some notes that shouldn't work", "fakedungeonbot")
+		if err == nil {
+			t.Error("Allowed unauthed user to append campaign notes")
+		}
+
+		err = db.appendCampaign("foocampaign", "some notes go here", "dungeonbot")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
 
 		row := CampaignRow{}
 		rrow := db.conn.QueryRow("SELECT * FROM campaigns WHERE name='foocampaign'")
-		rrow.Scan(&row.name, &row.notes)
+		rrow.Scan(&row.name, &row.users, &row.notes)
 
 		if row.notes != "some notes go here\n\n" {
 			t.Errorf("Got \"%s\", expected \"some notes go here\"", row.notes)
+		}
+	})
+}
+
+func Test_addCampaignuser(t *testing.T) {
+	t.Run("add campaign users", func(t *testing.T) {
+		db := beginDBTest()
+		defer endDBTest(db)
+
+		err := db.createCampaign("gronkulousness", "dungeonbot")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+
+		err = db.addCampaignUser("gronkulousness", "dungeonbot", "foouser")
+		if err != nil {
+			t.Errorf("%s", err.Error())
+		}
+
+		err = db.addCampaignUser("gronkulousness", "dungeonbot", "foouser")
+		if err == nil {
+			t.Error("Able to add user twice")
+		}
+
+		row := CampaignRow{}
+		rrow := db.conn.QueryRow("SELECT * FROM campaigns WHERE name='gronkulousness'")
+		rrow.Scan(&row.name, &row.users, &row.notes)
+
+		if !reflect.DeepEqual(row.users, "dungeonbot foouser") {
+			t.Errorf("Incorrect user list: %s", row.users)
 		}
 	})
 }
