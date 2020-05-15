@@ -8,11 +8,11 @@ import (
 func Test_pastebin(t *testing.T) {
 	go t.Run("pastebin", func(t *testing.T) {
 		egress := "this is a test paste"
-		ingress, err := pastebin("https://ttm.sh", egress)
+		ingress, err := pastebin("termbin.com:9999", egress)
 		if err != nil {
 			t.Error(err)
 		}
-		if !strings.HasPrefix(ingress, "https://ttm.sh/") {
+		if !strings.HasPrefix(ingress, "https://termbin.com") {
 			t.Errorf("Expected %s, got %s", egress, ingress)
 		}
 	})
