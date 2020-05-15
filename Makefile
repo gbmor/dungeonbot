@@ -1,5 +1,5 @@
 VERSION?=$(shell git tag | grep ^v | sort -V | tail -n 1)
-GOFLAGS?=-tags netgo -ldflags '-X main.VERSION=${VERSION} -extldflags "-static"'
+GOFLAGS?=-ldflags '-X main.VERSION=${VERSION}'
 
 dungeonbot: dungeonbot.go go.mod go.sum
 	@echo
