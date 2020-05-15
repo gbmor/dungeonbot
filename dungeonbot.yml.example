@@ -7,6 +7,9 @@ tls: true
 
 pastebin_url: 'termbin.com:9999'
 
+# set to ':memory:' for an in-memory database
+database_location: 'dungeonbot.db'
+
 ## Set debug_mode to false to suppress verbose output
 ## to the terminal when running dungeonbot
 debug_mode: true

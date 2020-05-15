@@ -35,6 +35,7 @@ type Config struct {
 	port        uint
 	tls         bool
 	pastebinURL string
+	dbLocation  string
 }
 
 func main() {
@@ -56,7 +57,7 @@ func main() {
 	conn.TLSConfig = &tls.Config{InsecureSkipVerify: false}
 
 	db := &DB{}
-	db.init("./dungeonbot.db")
+	db.init(conf.dbLocation)
 
 	conn.AddCallback("001", func(e *irc.Event) {
 		for i := 0; i < len(conf.chans); i++ {
@@ -252,6 +253,7 @@ func buildConf() Config {
 		port:        viper.GetUint("port"),
 		tls:         viper.GetBool("tls"),
 		pastebinURL: viper.GetString("pastebin_url"),
+		dbLocation: viper.GetString("database_location"),
 	}
 }
 
