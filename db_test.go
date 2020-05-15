@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+func beginDBTest() *DB {
+	db := &DB{}
+
+	err := db.init(":memory:")
+	if err != nil {
+		panic(err)
+	}
+
+	return db
+}
+
+func endDBTest(db *DB) {
+	err := db.conn.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func Test_pastebin(t *testing.T) {
 	go t.Run("pastebin", func(t *testing.T) {
 		egress := "this is a test paste"
@@ -19,14 +37,10 @@ func Test_pastebin(t *testing.T) {
 }
 func Test_DB_init(t *testing.T) {
 	t.Run("db init", func(t *testing.T) {
-		db := &DB{}
-		err := db.init()
-		if err != nil || db.conn == nil {
-			t.Errorf("%s", err.Error())
-		}
-		defer db.conn.Close()
+		db := beginDBTest()
+		defer endDBTest(db)
 
-		_, err = db.conn.Exec("INSERT OR REPLACE INTO pcs (nick, campaign, char, notes) VALUES(?, ?, ?, ?);", "foobat", "testCampaign", "testPlayer", "some notes")
+		_, err := db.conn.Exec("INSERT OR REPLACE INTO pcs (nick, campaign, char, notes) VALUES(?, ?, ?, ?);", "foobat", "testCampaign", "testPlayer", "some notes")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
@@ -54,14 +68,10 @@ func Test_DB_init(t *testing.T) {
 
 func Test_getCampaignNotes(t *testing.T) {
 	t.Run("get campaign notes", func(t *testing.T) {
-		db := &DB{}
-		err := db.init()
-		if err != nil {
-			t.Errorf("%s", err.Error())
-		}
-		defer db.conn.Close()
+		db := beginDBTest()
+		defer endDBTest(db)
 
-		_, err = db.conn.Exec("INSERT OR REPLACE INTO campaigns (name, notes) VALUES(?, ?)", "gronkulousness", "degronklified the dragon on 13 feb")
+		_, err := db.conn.Exec("INSERT OR REPLACE INTO campaigns (name, notes) VALUES(?, ?)", "gronkulousness", "degronklified the dragon on 13 feb")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
@@ -78,14 +88,10 @@ func Test_getCampaignNotes(t *testing.T) {
 
 func Test_createCampaign(t *testing.T) {
 	t.Run("create campaign entry", func(t *testing.T) {
-		db := &DB{}
-		err := db.init()
-		if err != nil {
-			t.Errorf("%s", err.Error())
-		}
-		defer db.conn.Close()
+		db := beginDBTest()
+		defer endDBTest(db)
 
-		err = db.createCampaign("testcampaign")
+		err := db.createCampaign("testcampaign")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}
@@ -99,14 +105,10 @@ func Test_createCampaign(t *testing.T) {
 
 func Test_appendCampaign(t *testing.T) {
 	t.Run("append campaign notes", func(t *testing.T) {
-		db := &DB{}
-		err := db.init()
-		if err != nil {
-			t.Errorf("%s", err.Error())
-		}
-		defer db.conn.Close()
+		db := beginDBTest()
+		defer endDBTest(db)
 
-		err = db.createCampaign("foocampaign")
+		err := db.createCampaign("foocampaign")
 		if err != nil {
 			t.Errorf("%s", err.Error())
 		}

@@ -65,9 +65,9 @@ func pastebin(pastebin string, input string) (string, error) {
 	return string(pbBytes), err
 }
 
-func (db *DB) init() error {
+func (db *DB) init(path string) error {
 	var err error
-	if db.conn, err = sql.Open("sqlite3", "./dungeonbot.db"); err != nil {
+	if db.conn, err = sql.Open("sqlite3", path); err != nil {
 		return fmt.Errorf("Failed to open database: %w", err)
 	}
 

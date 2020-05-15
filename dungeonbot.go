@@ -56,7 +56,7 @@ func main() {
 	conn.TLSConfig = &tls.Config{InsecureSkipVerify: false}
 
 	db := &DB{}
-	db.init()
+	db.init("./dungeonbot.db")
 
 	conn.AddCallback("001", func(e *irc.Event) {
 		for i := 0; i < len(conf.chans); i++ {
