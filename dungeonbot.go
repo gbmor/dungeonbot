@@ -57,8 +57,7 @@ func main() {
 	conn.UseTLS = conf.tls
 	conn.TLSConfig = &tls.Config{InsecureSkipVerify: false}
 
-	db := &DB{}
-	db.init(conf.dbLocation)
+	db := initDB(conf.dbLocation)
 
 	conn.AddCallback("001", func(e *irc.Event) {
 		for i := 0; i < len(conf.chans); i++ {
@@ -229,7 +228,7 @@ func main() {
 		}
 	})
 
-	watchForInterrupt(conn, conf.nick, db.conn, &conf)
+	watchForInterrupt(conn, db.conn, &conf)
 
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
@@ -264,7 +263,7 @@ func buildConf() Config {
 	}
 }
 
-func watchForInterrupt(conn *irc.Connection, nick string, db *sql.DB, conf *Config) {
+func watchForInterrupt(conn *irc.Connection, db *sql.DB, conf *Config) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 

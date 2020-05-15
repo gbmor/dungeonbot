@@ -6,18 +6,9 @@ import (
 	"testing"
 )
 
-func beginDBTest() *DB {
-	db := &DB{}
+const testDBLocation = ":memory:"
 
-	err := db.init(":memory:")
-	if err != nil {
-		panic(err)
-	}
-
-	return db
-}
-
-func endDBTest(db *DB) {
+func uninitDB(db *DB) {
 	err := db.conn.Close()
 	if err != nil {
 		panic(err)
@@ -38,8 +29,8 @@ func Test_pastebin(t *testing.T) {
 }
 func Test_DB_init(t *testing.T) {
 	t.Run("db init", func(t *testing.T) {
-		db := beginDBTest()
-		defer endDBTest(db)
+		db := initDB(testDBLocation)
+		defer uninitDB(db)
 
 		_, err := db.conn.Exec("INSERT OR REPLACE INTO pcs (user, campaign, char, notes) VALUES(?, ?, ?, ?);", "foobat", "testCampaign", "testPlayer", "some notes")
 		if err != nil {
@@ -69,8 +60,8 @@ func Test_DB_init(t *testing.T) {
 
 func Test_getCampaignNotes(t *testing.T) {
 	t.Run("get campaign notes", func(t *testing.T) {
-		db := beginDBTest()
-		defer endDBTest(db)
+		db := initDB(testDBLocation)
+		defer uninitDB(db)
 
 		_, err := db.conn.Exec("INSERT OR REPLACE INTO campaigns (name, users, notes) VALUES(?, ?, ?)", "gronkulousness", "dungeonbot", "degronklified the dragon on 13 feb")
 		if err != nil {
@@ -89,8 +80,8 @@ func Test_getCampaignNotes(t *testing.T) {
 
 func Test_createCampaign(t *testing.T) {
 	t.Run("create campaign entry", func(t *testing.T) {
-		db := beginDBTest()
-		defer endDBTest(db)
+		db := initDB(testDBLocation)
+		defer uninitDB(db)
 
 		err := db.createCampaign("testcampaign", "dungeonbot")
 		if err != nil {
@@ -106,8 +97,8 @@ func Test_createCampaign(t *testing.T) {
 
 func Test_appendCampaign(t *testing.T) {
 	t.Run("append campaign notes", func(t *testing.T) {
-		db := beginDBTest()
-		defer endDBTest(db)
+		db := initDB(testDBLocation)
+		defer uninitDB(db)
 
 		err := db.createCampaign("foocampaign", "dungeonbot")
 		if err != nil {
@@ -136,8 +127,8 @@ func Test_appendCampaign(t *testing.T) {
 
 func Test_addCampaignuser(t *testing.T) {
 	t.Run("add campaign users", func(t *testing.T) {
-		db := beginDBTest()
-		defer endDBTest(db)
+		db := initDB(testDBLocation)
+		defer uninitDB(db)
 
 		err := db.createCampaign("gronkulousness", "dungeonbot")
 		if err != nil {

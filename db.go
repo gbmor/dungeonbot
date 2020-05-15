@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -67,6 +68,15 @@ func pastebin(pastebin string, input string) (string, error) {
 	}
 
 	return string(pbBytes), err
+}
+
+func initDB(path string) *DB {
+	db := &DB{}
+	err := db.init(path)
+	if err != nil {
+		log.Fatalf("Could not initialize database: %s", err.Error())
+	}
+	return db
 }
 
 func (db *DB) init(path string) error {
