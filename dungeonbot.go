@@ -17,14 +17,6 @@ import (
 // VERSION is set by make
 var VERSION = ""
 
-// HELPTEXT contains usage information
-var HELPTEXT = []string{
-	"!roll NdN[+-N]: roll dice or a die with optional modifier. Eg: !roll 1d20+4",
-	"!add [campaign] $NAME: add a campaign entry called $NAME",
-	"!append [campaign] $NAME $NOTE: append $NOTE to a campaign called $NAME",
-	"!campaign $NAME: retrieve the campaign notes for $NAME",
-}
-
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
 	debug       bool
@@ -50,6 +42,7 @@ func main() {
 
 	conf := buildConf()
 	host := fmt.Sprintf("%s:%d", conf.server, conf.port)
+	helpText := genHelpText(conf)
 
 	conn := irc.IRC(conf.nick, conf.user)
 	conn.VerboseCallbackHandler = false
@@ -66,8 +59,7 @@ func main() {
 	})
 
 	conn.AddCallback("PRIVMSG", func(e *irc.Event) {
-		splitRaw := strings.Split(e.Raw, " ")
-		target := splitRaw[2]
+		target := e.Arguments[0]
 
 		if strings.HasPrefix(e.Message(), "rain drop") {
 			conn.Privmsg(target, "drop top")
@@ -81,10 +73,8 @@ func main() {
 			return
 		}
 
-		if msg[0] == "!help" || msg[0] == "dungeonbot:" {
-			for _, e := range HELPTEXT {
-				conn.Privmsg(target, e)
-			}
+		if msg[0] == "!help" || msg[0] == "dungeonbot:" || msg[0] == "!botlist" {
+			conn.Privmsg(target, helpText)
 		}
 
 		switch msg[0] {
@@ -228,7 +218,7 @@ func main() {
 		}
 	})
 
-	watchForInterrupt(conn, db.conn, &conf)
+	watchForInterrupt(conn, db.conn, conf)
 
 	if err := conn.Connect(host); err != nil {
 		log.Fatalf("Error connecting: %s\n", err.Error())
@@ -237,7 +227,7 @@ func main() {
 	conn.Loop()
 }
 
-func buildConf() Config {
+func buildConf() *Config {
 	viper.SetConfigName("dungeonbot")
 	viper.SetConfigType("yml")
 	viper.AddConfigPath(".")
@@ -249,7 +239,7 @@ func buildConf() Config {
 	chanWhole := viper.GetString("chans")
 	chanSep := strings.Split(chanWhole, ",")
 
-	return Config{
+	return &Config{
 		debug:       viper.GetBool("debug_mode"),
 		nick:        viper.GetString("nick"),
 		user:        viper.GetString("user"),
