@@ -17,6 +17,10 @@ import (
 // VERSION is set by make
 var VERSION = ""
 
+var CACHE = &notesCache{
+	kv: make(map[string]string),
+}
+
 // Config holds deserialized data from dungeonbot.yml
 type Config struct {
 	debug       bool
@@ -42,6 +46,7 @@ func main() {
 
 	conf := buildConf()
 	host := fmt.Sprintf("%s:%d", conf.server, conf.port)
+	CACHE.pb = conf.pastebinURL
 	helpText := genHelpText(conf)
 
 	conn := irc.IRC(conf.nick, conf.user)
@@ -108,13 +113,14 @@ func main() {
 				break
 			}
 
-			pbURL, err := pastebin(conf.pastebinURL, raw)
-			if err != nil {
-				conn.Privmsg(target, "Error connecting to pastebin service")
-				log.Printf("%s", err.Error())
-				break
-			}
+			//pbURL, err := pastebin(conf.pastebinURL, raw)
+			//if err != nil {
+			//	conn.Privmsg(target, "Error connecting to pastebin service")
+			//	log.Printf("%s", err.Error())
+			//	break
+			//}
 
+			pbURL := CACHE.bap(string(raw))
 			conn.Privmsg(target, pbURL)
 
 		case "!add":

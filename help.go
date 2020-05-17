@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 )
 
 // ZW is a zero-width space
@@ -36,11 +35,12 @@ An assistance bot for tabletop RPG games being played through IRC.
 
 	helpCtx := fmt.Sprintf("I'm an assistance bot for tabletop RPG games made by g%sbmor. You probably want to '!roll 1d20+4', but for extended help see: ", ZW)
 
-	url, err := pastebin(conf.pastebinURL, helpText)
-	if err != nil {
-		log.Printf("When sending help text: %s", err.Error())
-		url = "%error in pastebin service%"
-	}
+	//url, err := pastebin(conf.pastebinURL, helpText)
+	//if err != nil {
+	//	log.Printf("When sending help text: %s", err.Error())
+	//	url = "%error in pastebin service%"
+	//}
 
+	url := CACHE.bap(helpText)
 	return fmt.Sprintf("%s%s", helpCtx, url)
 }

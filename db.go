@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
-	"net"
 	"strings"
 	"sync"
 
@@ -48,26 +46,6 @@ type MonsterRow struct {
 	users string
 	stats string
 	notes string
-}
-
-func pastebin(pastebin string, input string) (string, error) {
-	pbconn, err := net.Dial("tcp", pastebin)
-	if err != nil {
-		return "", fmt.Errorf("Error connecting to pastebin service: %w", err)
-	}
-	defer pbconn.Close()
-
-	if _, err := pbconn.Write([]byte(input)); err != nil {
-		return "", fmt.Errorf("Error sending data to pastebin service: %w", err)
-	}
-
-	pbRdr := bufio.NewReader(pbconn)
-	pbBytes, _, err := pbRdr.ReadLine()
-	if err != nil {
-		return "", fmt.Errorf("Error reading response from pastebin service: %w", err)
-	}
-
-	return string(pbBytes), err
 }
 
 func initDB(path string) *DB {
