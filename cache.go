@@ -36,7 +36,7 @@ func pastebin(pastebin string, input string) (string, error) {
 }
 
 func (c *notesCache) bap(notes string) string {
-	return CACHE.yoink(CACHE.yeet(notes))
+	return c.yoink(c.yeet(notes))
 }
 
 func (c *notesCache) yoink(hash string) string {
@@ -56,12 +56,7 @@ func (c *notesCache) yeet(notes string) string {
 	}
 
 	bytes := fnv.New32a().Sum([]byte(notes))
-	if len(bytes) > 128 {
-		bytes = bytes[:128]
-	}
-
 	hash := fmt.Sprintf("%x", bytes)
-	log.Printf("HASH %s", hash)
 
 	c.Lock()
 	defer c.Unlock()
@@ -77,6 +72,5 @@ func (c *notesCache) yeet(notes string) string {
 	}
 
 	c.kv[hash] = url
-	log.Printf("URL %s", url)
 	return hash
 }

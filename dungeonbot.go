@@ -66,7 +66,7 @@ func main() {
 	conn.AddCallback("PRIVMSG", func(e *irc.Event) {
 		target := e.Arguments[0]
 
-		if strings.HasPrefix(e.Message(), "rain drop") {
+		if strings.HasPrefix(strings.ToLower(e.Message()), "rain drop") {
 			conn.Privmsg(target, "drop top")
 			return
 		}
@@ -78,11 +78,13 @@ func main() {
 			return
 		}
 
-		if msg[0] == "!help" || msg[0] == "dungeonbot:" || msg[0] == "!botlist" {
+		cmd := strings.ToLower(msg[0])
+
+		if cmd == "!help" || cmd == "dungeonbot:" || cmd == "!botlist" {
 			conn.Privmsg(target, helpText)
 		}
 
-		switch msg[0] {
+		switch cmd {
 		case "!roll":
 			if len(msg) < 2 {
 				conn.Privmsg(target, "Missing dice argument. Eg: !roll 1d20")
@@ -112,13 +114,6 @@ func main() {
 				log.Printf("%s", err.Error())
 				break
 			}
-
-			//pbURL, err := pastebin(conf.pastebinURL, raw)
-			//if err != nil {
-			//	conn.Privmsg(target, "Error connecting to pastebin service")
-			//	log.Printf("%s", err.Error())
-			//	break
-			//}
 
 			pbURL := CACHE.bap(string(raw))
 			conn.Privmsg(target, pbURL)
