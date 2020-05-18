@@ -63,36 +63,52 @@ func (db *DB) init(path string) error {
 		return fmt.Errorf("Failed to open database: %w", err)
 	}
 
-	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS pcs (
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := tx.Commit(); err != nil {
+			log.Printf("%s", err.Error())
+			tx.Rollback()
+		}
+	}()
+
+	_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS pcs (
 		user TEXT NOT NULL,
 		campaign TEXT NOT NULL,
 		char TEXT NOT NULL,
 		notes TEXT
-	);`); err != nil {
+	);`)
+	if err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `pcs`: %w", err)
 	}
 
-	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
+	_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS campaigns (
 		name TEXT NOT NULL UNIQUE,
                 users TEXT NOT NULL,
 		notes TEXT
-	);`); err != nil {
+	);`)
+	if err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `campaigns`: %w", err)
 	}
 
-	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS npcs (
+	_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS npcs (
 		name TEXT NOT NULL UNIQUE,
                 users TEXT NOT NULL,
 		notes TEXT
-	);`); err != nil {
+	);`)
+	if err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `npcs`: %w", err)
 	}
 
-	if _, err := db.conn.Exec(`CREATE TABLE IF NOT EXISTS monsters (
+	_, err = tx.Exec(`CREATE TABLE IF NOT EXISTS monsters (
 		name TEXT NOT NULL UNIQUE,
                 users TEXT NOT NULL,
 		notes TEXT
-	);`); err != nil {
+	);`)
+	if err != nil {
 		return fmt.Errorf("Couldn't create-if-not-exists table `monsters`: %w", err)
 	}
 
@@ -104,14 +120,25 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 		return "", fmt.Errorf("Couldn't ping database: %w", err)
 	}
 
-	row := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:campaign", sql.Named("campaign", campaign))
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return "", err
+	}
+
+	defer func() {
+		if err := tx.Commit(); err != nil {
+			log.Printf("%s", err.Error())
+			tx.Rollback()
+		}
+	}()
+
+	row := tx.QueryRow("SELECT * FROM campaigns WHERE name=:campaign", sql.Named("campaign", campaign))
 	if row == nil {
 		return "", fmt.Errorf("Couldn't query row in table campaigns, campaign: %s", campaign)
 	}
 
 	crow := CampaignRow{}
-	err := row.Scan(&crow.name, &crow.users, &crow.notes)
-	if err != nil {
+	if err := row.Scan(&crow.name, &crow.users, &crow.notes); err != nil {
 		return "", fmt.Errorf("Querying campaign notes: %w", err)
 	}
 	if crow.notes == "" {
@@ -130,12 +157,19 @@ func (db *DB) createCampaign(name, user string) error {
 		return fmt.Errorf("Couldn't begin transaction: %w", err)
 	}
 
+	defer func() {
+		if err := tx.Commit(); err != nil {
+			log.Printf("%s", err.Error())
+			tx.Rollback()
+		}
+	}()
+
 	_, err = tx.Exec("INSERT INTO campaigns (name, users, notes) VALUES(?, ?, ?)", name, user, "")
 	if err != nil {
 		return fmt.Errorf("Couldn't execute statement: %w", err)
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 func (db *DB) appendCampaign(name, note, user string) error {
@@ -146,7 +180,26 @@ func (db *DB) appendCampaign(name, note, user string) error {
 		return fmt.Errorf("Couldn't ping database: %w", err)
 	}
 
-	rowRaw := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:name", name)
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := tx.Prepare("SELECT * FROM campaigns WHERE name=:name")
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	defer func() {
+		stmt.Close()
+		if err := tx.Commit(); err != nil {
+			log.Printf("%s", err.Error())
+			tx.Rollback()
+		}
+	}()
+
+	rowRaw := stmt.QueryRow(sql.Named("name", name))
 	if rowRaw == nil {
 		return fmt.Errorf("Couldn't retrieve campaign notes to append, campaign: %s", name)
 	}
@@ -160,17 +213,12 @@ func (db *DB) appendCampaign(name, note, user string) error {
 
 	row.notes = fmt.Sprintf("%s%s\n\n", row.notes, note)
 
-	tx, err := db.conn.Begin()
-	if err != nil {
-		return fmt.Errorf("Couldn't begin transaction: %w", err)
-	}
-
 	_, err = tx.Exec("INSERT OR REPLACE INTO campaigns (name, users, notes) VALUES(?, ?, ?)", row.name, row.users, row.notes)
 	if err != nil {
 		return fmt.Errorf("Couldn't execute statement: %w", err)
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 func (db *DB) addCampaignUser(name, requser, user string) error {
@@ -184,7 +232,19 @@ func (db *DB) addCampaignUser(name, requser, user string) error {
 		return fmt.Errorf("Couldn't ping database: %w", err)
 	}
 
-	rowRaw := db.conn.QueryRow("SELECT * FROM campaigns WHERE name=:name", name)
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err := tx.Commit(); err != nil {
+			log.Printf("%s", err.Error())
+			tx.Rollback()
+		}
+	}()
+
+	rowRaw := tx.QueryRow("SELECT * FROM campaigns WHERE name=:name", name)
 	if rowRaw == nil {
 		return fmt.Errorf("Couldn't retrieve campaign row. Campaign: %s", name)
 	}
@@ -202,15 +262,10 @@ func (db *DB) addCampaignUser(name, requser, user string) error {
 
 	row.users += fmt.Sprintf(" %s", strings.TrimSpace(user))
 
-	tx, err := db.conn.Begin()
-	if err != nil {
-		return err
-	}
-
 	_, err = tx.Exec("INSERT OR REPLACE INTO campaigns (name, users, notes) VALUES(?, ?, ?)", row.name, row.users, row.notes)
 	if err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	return nil
 }
