@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 // DB holds the database connection
 type DB struct {
-	mu   sync.RWMutex
 	conn *sql.DB
 }
 
