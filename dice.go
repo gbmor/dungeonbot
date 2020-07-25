@@ -54,22 +54,26 @@ func parseDice(s string) (string, error) {
 		return "", errors.New("invalid dice type")
 	}
 
-	out := ""
+	var out strings.Builder
 	var totes []int
+
 	for i := 0; i < diceNum; i++ {
 		res := getRoll(diceCeiling)
 		totes = append(totes, res)
 		if i == diceNum-1 {
-			out += fmt.Sprintf("%d", res)
+			out.WriteString(fmt.Sprintf("%d", res))
 		} else {
-			out += fmt.Sprintf("%d  ", res)
+			out.WriteString(fmt.Sprintf("%d  ", res))
 		}
 	}
+
 	total := 0
 	for _, d := range totes {
 		total += d
 	}
-	out += fmt.Sprintf(",  total: %d", total+plus)
 
-	return out, nil
+	max := diceCeiling*diceNum + plus
+	out.WriteString(fmt.Sprintf(",  total: %d/%d", total+plus, max))
+
+	return out.String(), nil
 }
