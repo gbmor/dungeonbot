@@ -17,6 +17,7 @@ import (
 // VERSION is set by make
 var VERSION = ""
 
+// CACHE holds the notes
 var CACHE = &notesCache{
 	kv: make(map[string]string),
 }

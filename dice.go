@@ -51,7 +51,7 @@ func parseDice(s string) (string, error) {
 		}
 	}
 	if !valid {
-		return "", errors.New("invalid dice type")
+		return "", errors.New("invalid die type")
 	}
 
 	var out strings.Builder

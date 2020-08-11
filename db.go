@@ -140,7 +140,7 @@ func (db *DB) getCampaignNotes(campaign string) (string, error) {
 		return "", fmt.Errorf("Querying campaign notes: %w", err)
 	}
 	if crow.notes == "" {
-		return "", fmt.Errorf("No campaign notes for '%s':\n\t%v\n%v\n", campaign, row, crow)
+		return "", fmt.Errorf("no campaign notes for '%s':\n\t%v\n%v", campaign, row, crow)
 	}
 	return crow.notes, nil
 }
